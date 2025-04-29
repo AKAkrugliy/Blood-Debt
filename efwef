@@ -1,0 +1,323 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Категории режимов
+local Modes = {
+    DebtMode = {
+        Vigilante_guns = {"GG-17", "J9-Meretta", "RR-Snubby", "Beagle"},
+        Killer_guns = {"JS-2 Derringy", "K1911", "Kamatov", "SKORPION"},
+        Melee_weapons = {"Kitchen Knife", "Boxcutter", "Lead Pipe", "Pen"},
+        Colors = {
+            Killer = Color3.fromRGB(255, 0, 0),
+            Sheriff = Color3.fromRGB(0, 0, 255),
+            Bystander = Color3.fromRGB(0, 255, 0)
+        }
+    },
+    TeamWar = {
+        Teams = {
+            ["Street Gang"] = Color3.fromRGB(139, 69, 19), -- Коричнево-белый
+            ["Bratva"] = Color3.fromRGB(128, 0, 128), -- Фиолетово-голубой
+            ["Nubagami"] = Color3.fromRGB(255, 0, 0) -- Красно-черный
+        },
+        AllyColor = Color3.fromRGB(0, 255, 0),
+        EnemyColor = Color3.fromRGB(255, 0, 0)
+    },
+    HideAndSeek = {
+        Juggernaut_guns = {"JS-2 Derringy", "JS-22", "RR-LightCombatPistol", "IZVEKH-412"},
+        JuggernautColor = Color3.fromRGB(255, 0, 0),
+        OfficeWorkerColor = Color3.fromRGB(0, 255, 0)
+    }
+}
+
+local function has_value(tab, val)
+    for _, v in ipairs(tab) do
+        if v == val then
+            return true
+        end
+    end
+    return false
+end
+
+local h = Instance.new("Highlight")
+h.Name = "Highlight"
+h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+h.FillTransparency = 0.55
+h.OutlineTransparency = 0.25
+
+local b = Instance.new("BillboardGui")
+b.Name = "ESP"
+b.Size = UDim2.new(0, 150, 0, 30)
+b.StudsOffset = Vector3.new(0, 3, 0)
+b.AlwaysOnTop = true
+b.LightInfluence = 0
+b.MaxDistance = 100
+
+local frame = Instance.new("Frame", b)
+frame.Name = "ESPFrame"
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundTransparency = 0.5
+frame.BorderSizePixel = 2
+
+local label = Instance.new("TextLabel", b)
+label.Name = "RoleLabel"
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.TextScaled = false
+label.TextSize = 14
+label.Font = Enum.Font.Gotham
+label.TextColor3 = Color3.new(1, 1, 1)
+label.TextStrokeTransparency = 0.5
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BloodDebtESP"
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+local frameGui = Instance.new("Frame")
+frameGui.Size = UDim2.new(0, 200, 0, 150)
+frameGui.Position = UDim2.new(1, -210, 0, 10)
+frameGui.BackgroundTransparency = 0.3
+frameGui.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frameGui.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Blood Debt ESP"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Parent = frameGui
+
+local chamsButton = Instance.new("TextButton")
+chamsButton.Size = UDim2.new(0.9, 0, 0, 30)
+chamsButton.Position = UDim2.new(0.05, 0, 0, 40)
+chamsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+chamsButton.Text = "Chams: OFF"
+chamsButton.TextColor3 = Color3.new(1, 1, 1)
+chamsButton.Parent = frameGui
+
+local espButton = Instance.new("TextButton")
+espButton.Size = UDim2.new(0.9, 0, 0, 30)
+espButton.Position = UDim2.new(0.05, 0, 0, 80)
+espButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+espButton.Text = "ESP: OFF"
+espButton.TextColor3 = Color3.new(1, 1, 1)
+espButton.Parent = frameGui
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.9, 0, 0, 30)
+closeButton.Position = UDim2.new(0.05, 0, 0, 120)
+closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+closeButton.Text = "Close"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Parent = frameGui
+
+local chamsEnabled = false
+local espEnabled = false
+local currentMode = "DebtMode" -- По умолчанию Debt Mode
+
+local function clearEffects(char)
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local head = char:FindFirstChild("Head")
+if hrp and hrp:FindFirstChild("Highlight") then
+            hrp.Highlight:Destroy()
+        end
+        if head and head:FindFirstChild("ESP") then
+            head.ESP:Destroy()
+        end
+    end
+end
+
+chamsButton.MouseButton1Click:Connect(function()
+    chamsEnabled = not chamsEnabled
+    chamsButton.Text = "Chams: " .. (chamsEnabled and "ON" or "OFF")
+    chamsButton.BackgroundColor3 = chamsEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+    if not chamsEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                clearEffects(player.Character)
+            end
+        end
+    end
+end)
+
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espButton.Text = "ESP: " .. (espEnabled and "ON" or "OFF")
+    espButton.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+    if not espEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                clearEffects(player.Character)
+            end
+        end
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.H then
+        screenGui.Enabled = not screenGui.Enabled
+    end
+end)
+
+local function getDebtModeRole(player)
+    local role = "Bystander"
+    local roleColor = Modes.DebtMode.Colors.Bystander
+    local char = player.Character
+    local backpack = player:FindFirstChild("Backpack")
+
+    if char then
+        for _, item in ipairs(char:GetChildren()) do
+            if item:IsA("Tool") then
+                if has_value(Modes.DebtMode.Killer_guns, item.Name) then
+                    return "Killer", Modes.DebtMode.Colors.Killer
+                elseif has_value(Modes.DebtMode.Vigilante_guns, item.Name) then
+                    return "Sheriff", Modes.DebtMode.Colors.Sheriff
+                elseif has_value(Modes.DebtMode.Melee_weapons, item.Name) then
+                    return "Bystander", Modes.DebtMode.Colors.Bystander
+                end
+            end
+        end
+    end
+
+    if backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                if has_value(Modes.DebtMode.Killer_guns, tool.Name) then
+                    return "Killer", Modes.DebtMode.Colors.Killer
+                elseif has_value(Modes.DebtMode.Vigilante_guns, tool.Name) then
+                    return "Sheriff", Modes.DebtMode.Colors.Sheriff
+                elseif has_value(Modes.DebtMode.Melee_weapons, tool.Name) then
+                    return "Bystander", Modes.DebtMode.Colors.Bystander
+                end
+            end
+        end
+    end
+
+    local roleValue = player:FindFirstChild("Role") or (char and char:FindFirstChild("Role"))
+    if roleValue and roleValue:IsA("StringValue") then
+        if roleValue.Value == "Killer" then
+            return "Killer", Modes.DebtMode.Colors.Killer
+        elseif roleValue.Value == "Sheriff" then
+            return "Sheriff", Modes.DebtMode.Colors.Sheriff
+        elseif roleValue.Value == "Bystander" then
+            return "Bystander", Modes.DebtMode.Colors.Bystander
+        end
+    end
+
+    return role, roleColor
+end
+
+local function getTeamWarRole(player)
+    local role = "Enemy"
+    local roleColor = Modes.TeamWar.EnemyColor
+    if player == LocalPlayer or (player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team) then
+        role = "Ally"
+        roleColor = Modes.TeamWar.AllyColor
+    else
+        local teamName = player.Team and player.Team.Name or "Unknown"
+        roleColor = Modes.TeamWar.Teams[teamName] or Modes.TeamWar.EnemyColor
+    end
+    return role, roleColor
+end
+
+local function getHideAndSeekRole(player)
+    local role = "Office Worker"
+    local roleColor = Modes.HideAndSeek.OfficeWorkerColor
+    local char = player.Character
+    local backpack = player:FindFirstChild("Backpack")
+bc.ESPFrame.BackgroundColor3 = roleColor
+                                bc.ESPFrame.BorderColor3 = roleColor
+                                bc.RoleLabel.Text = role
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+        player.CharacterAdded:Connect(function(char)
+            if chamsEnabled or espEnabled then
+                local role, roleColor = getRole(player)
+                if chamsEnabled then
+                    local hrp = char:WaitForChild("HumanoidRootPart", 1)
+                    if hrp and not hrp:FindFirstChild("Highlight") then
+                        local hc = h:Clone()
+                        hc.Adornee = char
+                        hc.FillColor = roleColor
+                        hc.OutlineColor = roleColor
+                        hc.Parent = hrp
+                    end
+                end
+                if espEnabled then
+                    local head = char:WaitForChild("Head", 1)
+                    if head and not head:FindFirstChild("ESP") then
+                        local bc = b:Clone()
+                        bc.ESPFrame.BackgroundColor3 = roleColor
+                        bc.ESPFrame.BorderColor3 = roleColor
+                        bc.RoleLabel.Text = role
+                        bc.Parent = head
+                    end
+                end
+            end
+        end)
+    end
+end
+
+while task.wait(0.5) do
+    detectGameMode()
+    if chamsEnabled or espEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local char = player.Character
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local head = char:FindFirstChild("Head")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+                if hrp and head and humanoid then
+                    local role, roleColor = getRole(player)
+
+                    if chamsEnabled then
+                        if not hrp:FindFirstChild("Highlight") then
+                            local hc = h:Clone()
+                            hc.Adornee = char
+                            hc.FillColor = roleColor
+                            hc.OutlineColor = roleColor
+                            hc.Parent = hrp
+                        else
+                            local hc = hrp:FindFirstChild("Highlight")
+                            hc.FillColor = roleColor
+                            hc.OutlineColor = roleColor
+                        end
+                    elseif hrp:FindFirstChild("Highlight") then
+                        hrp.Highlight:Destroy()
+                    end
+
+                    if espEnabled then
+                        if not head:FindFirstChild("ESP") then
+                            local bc = b:Clone()
+                            bc.ESPFrame.BackgroundColor3 = roleColor
+                            bc.ESPFrame.BorderColor3 = roleColor
+                            bc.RoleLabel.Text = role
+                            bc.Parent = head
+                        else
+                            local bc = head:FindFirstChild("ESP")
+                            bc.ESPFrame.BackgroundColor3 = roleColor
+                            bc.ESPFrame.BorderColor3 = roleColor
+                            bc.RoleLabel.Text = role
+                        end
+                    elseif head:FindFirstChild("ESP") then
+                        head.ESP:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
