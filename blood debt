@@ -1,0 +1,233 @@
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+local Vigilante_guns = {"GG-17", "J9-Meretta", "RR-Snubby", "Beagle"}
+local Killer_guns = {"JS-2 Derringy", "K1911", "Kamatov", "SKORPION"}
+
+local function has_value(tab, val)
+    for _, v in ipairs(tab) do
+        if v == val then
+            return true
+        end
+    end
+    return false
+end
+
+local h = Instance.new("Highlight")
+h.Name = "Highlight"
+h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+h.FillTransparency = 0.55
+h.OutlineTransparency = 0.25
+
+local b = Instance.new("BillboardGui")
+b.Name = "ESP"
+b.Size = UDim2.new(0, 200, 0, 50)
+b.StudsOffset = Vector3.new(0, 3, 0)
+b.AlwaysOnTop = true
+b.LightInfluence = 0
+b.MaxDistance = 100
+
+local frame = Instance.new("Frame", b)
+frame.Name = "ESPFrame"
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundTransparency = 0.5
+frame.BorderSizePixel = 2
+
+local label = Instance.new("TextLabel", b)
+label.Name = "RoleLabel"
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.TextScaled = true
+label.TextColor3 = Color3.new(1, 1, 1)
+label.TextStrokeTransparency = 0.5
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BloodDebtESP"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+local frameGui = Instance.new("Frame")
+frameGui.Size = UDim2.new(0, 200, 0, 150)
+frameGui.Position = UDim2.new(1, -210, 0, 10)
+frameGui.BackgroundTransparency = 0.3
+frameGui.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frameGui.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Blood Debt ESP"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Parent = frameGui
+
+local chamsButton = Instance.new("TextButton")
+chamsButton.Size = UDim2.new(0.9, 0, 0, 30)
+chamsButton.Position = UDim2.new(0.05, 0, 0, 40)
+chamsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+chamsButton.Text = "Chams: OFF"
+chamsButton.TextColor3 = Color3.new(1, 1, 1)
+chamsButton.Parent = frameGui
+
+local espButton = Instance.new("TextButton")
+espButton.Size = UDim2.new(0.9, 0, 0, 30)
+espButton.Position = UDim2.new(0.05, 0, 0, 80)
+espButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+espButton.Text = "ESP: OFF"
+espButton.TextColor3 = Color3.new(1, 1, 1)
+espButton.Parent = frameGui
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.9, 0, 0, 30)
+closeButton.Position = UDim2.new(0.05, 0, 0, 120)
+closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+closeButton.Text = "Close"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Parent = frameGui
+
+local chamsEnabled = false
+local espEnabled = false
+
+local function clearEffects(char)
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local head = char:FindFirstChild("Head")
+        if hrp and hrp:FindFirstChild("Highlight") then
+            hrp.Highlight:Destroy()
+        end
+        if head and head:FindFirstChild("ESP") then
+            head.ESP:Destroy()
+        end
+    end
+end
+
+chamsButton.MouseButton1Click:Connect(function()
+    chamsEnabled = not chamsEnabled
+    chamsButton.Text = "Chams: " .. (chamsEnabled and "ON" or "OFF")
+    chamsButton.BackgroundColor3 = chamsEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+    if not chamsEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                clearEffects(player.Character)
+            end
+        end
+    end
+end)
+
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espButton.Text = "ESP: " .. (espEnabled and "ON" or "OFF")
+    espButton.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+    if not espEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+if player.Character then
+                clearEffects(player.Character)
+            end
+        end
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.H then
+            screenGui.Enabled = not screenGui.Enabled
+        elseif input.KeyCode == Enum.KeyCode.J then
+            chamsEnabled = not chamsEnabled
+            chamsButton.Text = "Chams: " .. (chamsEnabled and "ON" or "OFF")
+            chamsButton.BackgroundColor3 = chamsEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+            if not chamsEnabled then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player.Character then
+                        clearEffects(player.Character)
+                    end
+                end
+            end
+        elseif input.KeyCode == Enum.KeyCode.K then
+            espEnabled = not espEnabled
+            espButton.Text = "ESP: " .. (espEnabled and "ON" or "OFF")
+            espButton.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(100, 100, 100)
+            if not espEnabled then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player.Character then
+                        clearEffects(player.Character)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+while task.wait(0.5) do
+    if chamsEnabled or espEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local char = player.Character
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local head = char:FindFirstChild("Head")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+                if hrp and head and humanoid then
+                    local role = "Bystander"
+                    local roleColor = Color3.fromRGB(0, 255, 0)
+                    local backpack = player:FindFirstChild("Backpack")
+
+                    if backpack then
+                        for _, tool in ipairs(backpack:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                if has_value(Killer_guns, tool.Name) then
+                                    role = "Killer"
+                                    roleColor = Color3.fromRGB(255, 0, 0)
+                                    break
+                                elseif has_value(Vigilante_guns, tool.Name) then
+                                    role = "Vigilante"
+                                    roleColor = Color3.fromRGB(0, 0, 255)
+                                    break
+                                end
+                            end
+                        end
+                    end
+
+                    if chamsEnabled then
+                        if not hrp:FindFirstChild("Highlight") then
+                            local hc = h:Clone()
+                            hc.Adornee = char
+                            hc.FillColor = roleColor
+                            hc.OutlineColor = roleColor
+                            hc.Parent = hrp
+                        else
+                            local hc = hrp:FindFirstChild("Highlight")
+                            hc.FillColor = roleColor
+                            hc.OutlineColor = roleColor
+                        end
+                    elseif hrp:FindFirstChild("Highlight") then
+                        hrp.Highlight:Destroy()
+                    end
+
+                    if espEnabled then
+                        if not head:FindFirstChild("ESP") then
+                            local bc = b:Clone()
+                            bc.ESPFrame.BackgroundColor3 = roleColor
+                            bc.ESPFrame.BorderColor3 = roleColor
+                            bc.RoleLabel.Text = role
+                            bc.Parent = head
+else
+                            local bc = head:FindFirstChild("ESP")
+                            bc.ESPFrame.BackgroundColor3 = roleColor
+                            bc.ESPFrame.BorderColor3 = roleColor
+                            bc.RoleLabel.Text = role
+                        end
+                    elseif head:FindFirstChild("ESP") then
+                        head.ESP:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
